@@ -8,6 +8,11 @@
 
 #import "AppDelegate.h"
 
+#import <FBSDKCoreKit/FBSDKCoreKit.h>
+#import "IGClient.h"
+
+#import "IGListViewController.h"
+
 @interface AppDelegate ()
 
 @end
@@ -17,7 +22,32 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    [[FBSDKApplicationDelegate sharedInstance] application:application
+                             didFinishLaunchingWithOptions:launchOptions];
+    // Init Client
+    [[IGClient sharedClient] reachability];
+
+    // Init Cache
+    NSURLCache *urlCache = [[NSURLCache alloc]
+                            initWithMemoryCapacity:1024*1024*4  // 1MB mem cache
+                            diskCapacity:1024*1024*100          // 100MB disk cache
+                            diskPath:nil];
+    
+    [NSURLCache setSharedURLCache:urlCache];
+ 
+    // StatusBar color
+//    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+   
+        
     return YES;
+}
+
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    return [[FBSDKApplicationDelegate sharedInstance] application:application
+                                                          openURL:url
+                                                sourceApplication:sourceApplication
+                                                       annotation:annotation
+            ];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
@@ -36,12 +66,22 @@
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    
+    [FBSDKAppEvents activateApp];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     // Saves changes in the application's managed object context before the application terminates.
     [self saveContext];
+}
+
+- (void)changeRootViewController
+{
+    IGListViewController *loginController = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"IGListViewController"]; //or the homeController
+    UINavigationController *navController = [[UINavigationController alloc]initWithRootViewController:loginController];
+    
+    self.window.rootViewController = navController;
 }
 
 #pragma mark - Core Data stack
